@@ -8,16 +8,25 @@
 
     <!-- Begin row -->
     <div class="row">
-      <!-- Begin col for showing bookings -->
+      <!-- Begin col for formatted bookings -->
       <div class="column">
-        <h2>Bookings for <span id="selected-date"></span></h2>
-        <div id="bookings">
-          <p>Loading reservations...</p> <!-- This message will be replaced by actual bookings -->
+        <h2>Formatted Bookings</h2>
+        <div id="formattedBookings">
+          {% if formatted_bookings %}
+            {% for booking in formatted_bookings %}
+              <p><strong>Name:</strong> {{ booking.first_name }} | <strong>Time:</strong> {{ booking.reservation_slot }} | <strong>Date:</strong> {{ booking.reservation_date }}</p>
+            {% endfor %}
+          {% else %}
+            <p>No bookings available for the selected date.</p>
+          {% endif %}
         </div>
+
+        <h2>Raw JSON Data</h2>
+        <pre id="rawJson">{{ raw_json|safe }}</pre> <!-- Display raw JSON data -->
       </div>
       <!-- End col -->
 
-      <!-- Begin col for embedded map -->
+      <!-- Begin col with the embedded map -->
       <div class="column">
         <div class="videowrap">
           <iframe
@@ -34,46 +43,7 @@
 </section>
 
 <script>
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('selected-date').innerText = today;
-
-  // Fetch bookings for the selected date (default is today)
-  function getBookings(date) {
-    fetch("{% url 'bookings' %}?date=" + date)
-      .then(response => response.json())
-      .then(data => {
-        let bookingsDisplay = '';
-
-        if (data.length === 0) {
-          bookingsDisplay = '<p>No bookings available for the selected date.</p>';
-        } else {
-          // Loop through the booking data and display it
-          data.forEach(item => {
-            bookingsDisplay += `
-              <p><strong>Name:</strong> ${item.fields.first_name} 
-              | <strong>Date:</strong> ${item.fields.reservation_date} 
-              | <strong>Time:</strong> ${formatTime(item.fields.reservation_slot)}</p>`;
-          });
-        }
-
-        // Display the formatted bookings
-        document.getElementById('bookings').innerHTML = bookingsDisplay;
-      })
-      .catch(error => {
-        console.error('Error loading bookings:', error);
-        document.getElementById('bookings').innerHTML = '<p>Error loading bookings data.</p>';
-      });
-  }
-
-  // Format the time from the 24-hour format to AM/PM
-  function formatTime(slot) {
-    const ampm = slot < 12 ? 'AM' : 'PM';
-    const hour = slot <= 12 ? slot : slot - 12;
-    return `${hour} ${ampm}`;
-  }
-
-  // Call the getBookings function with today's date on page load
-  getBookings(today);
+  // JavaScript part to handle raw and formatted data in case needed
+  console.log("Raw JSON data: ", JSON.parse('{{ raw_json|escapejs }}'));
 </script>
 {% endblock %}
