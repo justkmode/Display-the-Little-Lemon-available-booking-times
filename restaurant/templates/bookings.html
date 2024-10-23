@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section>
+  <article>
+    <h1>All Reservations</h1>
+
+    <!-- Begin row -->
+    <div class="row">
+      <!-- Begin col for showing bookings -->
+      <div class="column">
+        <h2>Bookings for <span id="selected-date"></span></h2>
+        <div id="bookings">
+          <p>Loading reservations...</p> <!-- This message will be replaced by actual bookings -->
+        </div>
+      </div>
+      <!-- End col -->
+
+      <!-- Begin col for embedded map -->
+      <div class="column">
+        <div class="videowrap">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11898.289517452584!2d-87.60853049433447!3d41.79442860243028!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2912ce6f7027%3A0xc0cfb5545d4a37b2!2sHyde%20Park%2C%20Chicago%2C%20IL%2C%20USA!5e0!3m2!1sen!2spt!4v1662384760663!5m2!1sen!2spt"
+            width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+      <!-- End col -->
+    </div>
+    <!-- End row -->
+
+  </article>
+</section>
+
+<script>
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('selected-date').innerText = today;
+
+  // Fetch bookings for the selected date (default is today)
+  function getBookings(date) {
+    fetch("{% url 'bookings' %}?date=" + date)
+      .then(response => response.json())
+      .then(data => {
+        let bookingsDisplay = '';
+
+        if (data.length === 0) {
+          bookingsDisplay = '<p>No bookings available for the selected date.</p>';
+        } else {
+          // Loop through the booking data and display it
+          data.forEach(item => {
+            bookingsDisplay += `
+              <p><strong>Name:</strong> ${item.fields.first_name} 
+              | <strong>Date:</strong> ${item.fields.reservation_date} 
+              | <strong>Time:</strong> ${formatTime(item.fields.reservation_slot)}</p>`;
+          });
+        }
+
+        // Display the formatted bookings
+        document.getElementById('bookings').innerHTML = bookingsDisplay;
+      })
+      .catch(error => {
+        console.error('Error loading bookings:', error);
+        document.getElementById('bookings').innerHTML = '<p>Error loading bookings data.</p>';
+      });
+  }
+
+  // Format the time from the 24-hour format to AM/PM
+  function formatTime(slot) {
+    const ampm = slot < 12 ? 'AM' : 'PM';
+    const hour = slot <= 12 ? slot : slot - 12;
+    return `${hour} ${ampm}`;
+  }
+
+  // Call the getBookings function with today's date on page load
+  getBookings(today);
+</script>
+{% endblock %}
